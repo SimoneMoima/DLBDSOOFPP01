@@ -1,3 +1,4 @@
+
 from habit_database import HabitDatabase
 from datetime import date, datetime, timedelta
 
@@ -9,7 +10,8 @@ class Habit:
                  periodicity: str, 
                  creation_date: str = None, 
                  creation_time: str = None, 
-                 db = None):
+                 db = None
+        ):
         """Habit class to store habits
 
         Args:
@@ -18,7 +20,6 @@ class Habit:
             periodicity (str): daily, weekly. 
             creation_date (str): date the habit was created. Defaults to current date
             creation_time (str): time the habit was created. Defaults to current time
-            longest_streak(int): longest current streak
             db (object, optional): Database connection or interface. Defaults to a new HabitDatabaase instance.
         """
         self.db = db if db else HabitDatabase()
@@ -63,35 +64,34 @@ class Habit:
         return ( "\nHabit information: \n"
                 "--------------------------------\n"
                 f"Habit ID: {self.habit_id}\n"
-                 f"Habit: {self.name}\n"
-                 f"Description: {self.description}\n"
-                 f"Periodicity: {self.periodicity}\n"
-                 f"Creation Date: {self.creation_date}\n"
-                 f"Creation Time: {self.creation_time}\n"
-                 f"Current streak: {self.current_streak}\n"
-                 f"Longest streak: {self.longest_streak}\n"
-                 "--------------------------------\n"
-                 )
+                f"Habit: {self.name}\n"
+                f"Description: {self.description}\n"
+                f"Periodicity: {self.periodicity}\n"
+                f"Creation Date: {self.creation_date}\n"
+                f"Creation Time: {self.creation_time}\n"
+                f"Current streak: {self.current_streak}\n"
+                f"Longest streak: {self.longest_streak}\n"
+                "--------------------------------\n"
+        )
 
     def _is_duplicate(self, name: str = None, periodicity: str = None):
         """Check for duplicates of habit names in database
 
         Raises:
-            ValueError: Habit doesnt exist
+            ValueError: No name was provided
             ValueError: A habit with the same name and periodicity already exists
         """
         if not self.name or not name:
-            raise ValueError("\nHabit name must be set before checking for duplicates.")
-        
+            raise ValueError("Please provide a habit name.")
         if name:
-            duplicate = self.db._db_check_duplicate(name, periodicity)
+            duplicate = self.db.db_check_duplicate(name, periodicity)
         else:
-            duplicate = self.db._db_check_duplicate(self.name, self.periodicity)
+            duplicate = self.db.db_check_duplicate(self.name, self.periodicity)
         
         if duplicate:
             raise ValueError(f"\n The'{self.periodicity}' habit '{self.name}' already exists.")
 
-    def save(self, db=None):
+    def save(self):
         """Save the habit in the database, current date and time are automatically added
 
         Args:
@@ -104,9 +104,9 @@ class Habit:
         """
         if not self.name or len(self.name) > 255:
             raise ValueError("Habit must be non empty and less than 255 char.")
-        
+        # Check if periodicity is correct 
         self._correct_periodicity(self.periodicity)
-
+        # Check if name and periodicity pair does not exist already
         self._is_duplicate(self.name, self.periodicity)
         
         self.habit_id = self.db.db_save(self.name, self.description, self.periodicity, self.creation_date, self.creation_time)
@@ -119,21 +119,16 @@ class Habit:
             name (str): Name of the  habit. Defaults to None.
             description (str): Description of habit. Defaults to None.
             periodicity (str): Periodicity of habit. Defaults to None.
-
-        Raises:
-            ValueError: Habit with that name already exists.
         """
-        if name:
-            self._is_duplicate(name, periodicity)
-        if name:
+        if name: # Set new habit name
+            self._is_duplicate(name, periodicity) # Check if habit with this name and periodicity already exists
             self.name = name
-        if description:
+        if description: # Set new habit description
             self.description = description
-        if periodicity:
-            print("Inside update function inside if periodicity")
+        if periodicity: # Set new habit periodicity 
             self.periodicity = periodicity
-            self._correct_periodicity(self.periodicity)
-        if self.habit_id:
+            self._correct_periodicity(self.periodicity) # Check if periodicity was entered correctly
+        if self.habit_id: # Call update function 
             self.db.db_update(self.habit_id, name=name, description=description, periodicity=periodicity)
 
 
@@ -145,9 +140,8 @@ class Habit:
             completed_time (str, optional): Time of completion. Defaults to None.
 
         Raises:
-            ValueError: Habit has not been saved to database
+            ValueError: Habit has not been saved to database no id was set
         """
- #       print("Inside record completion in habit.py")
         #If date and time are empty, use current date and time
         if not completed_date:
             completed_date = str(date.today())
@@ -159,13 +153,14 @@ class Habit:
             raise ValueError("\nHabit must be saved before completed")
         
         self.db.db_record_completion(self.habit_id, completed_date, completed_time)
-
+        
+        #Automatically calculate and save streak data
         if self.periodicity == 'daily':
             self.calculate_daily_streak()
         elif self.periodicity == 'weekly':
             self.calculate_weekly_streak()
 
-    def get_completed_dates(self):
+    def _get_completed_dates(self):
         """Retrieve all completion dates for the habit by internal id
 
         Returns:
@@ -192,19 +187,21 @@ class Habit:
         Returns:
             List: List with all habit values as enties
         """
-        db = db if db else HabitDatabase()
-  
+        db = db if db else HabitDatabase() # Initialize database connection
+        #Check if habit exists
+        if not db.db_habit_exists:
+            return
+        # Fetch habit data
         habit_data = db.db_get_habit_by_id(habit_id)
-        if not habit_data:
-            raise ValueError(f"\nHabit with ID {habit_id} does not exist")
+        # Save habit data in a List
         habit = cls( 
             name = habit_data[1],
             description = habit_data[2],
             periodicity = habit_data[3]
             )
         habit.habit_id = habit_data[0]
-        habit.creation_date = habit_data[4]  # Set creation date
-        habit.creation_time = habit_data[5]  # Set creation time
+        habit.creation_date = habit_data[4]  
+        habit.creation_time = habit_data[5]  
         habit.longest_streak = habit_data[6]
         habit.current_streak = habit_data[7]
         return habit
@@ -222,7 +219,7 @@ class Habit:
         db = db if db else HabitDatabase()  # Initialize database connection
         all_habit_data = db.db_get_all_habits()  # Retrieve all habits data
         
-        # Create Habit instances for each habit record and manually set creation date and longest streak
+        # Create Habit instances for each habit record
         all_habits = []
         try:
             for data in all_habit_data:
@@ -249,7 +246,7 @@ class Habit:
             streak (int): length of current streak
         """
         self.current_streak = streak
-        self.db.db_update(habit_id=self.habit_id, current_streak = streak)
+        self.db.db_update_streak(habit_id=self.habit_id, current_streak = streak)
         
 
     def _update_longest_streak(self, streak):
@@ -260,12 +257,12 @@ class Habit:
         """
         if streak > self.longest_streak:
             self.longest_streak = streak
-            self.db.db_update(habit_id=self.habit_id,longest_streak=self.longest_streak)
+            self.db.db_update_streak(habit_id=self.habit_id,longest_streak=self.longest_streak)
     
     def calculate_daily_streak(self):
         """Calculate the daily streak of consecutive completions.
         """
-        completed_dates = self.get_completed_dates()
+        completed_dates = self._get_completed_dates()
         #Sort the List to make sure the most recent date is evaluated first
         completed_dates = sorted(
             {datetime.strptime(date_str, "%Y-%m-%d").date() for date_str in completed_dates}, 
@@ -294,21 +291,18 @@ class Habit:
         """
         return day - timedelta(days=day.weekday())
 
-    def calculate_weekly_streak(self, db=None):
+    def calculate_weekly_streak(self):
         """Calculate the current weekly streak of consecutive weeks for a habit.
-
-        Args:
-            db (_type_, optional): _description_. Defaults to None.
 
         Returns:
             int: length of streak
         """
 
-        completed_dates = self.get_completed_dates()
+        completed_dates = self._get_completed_dates() # get completed dates from the database
         unique_week_starts = sorted(
             {self._get_week_start(datetime.strptime(date_str, "%Y-%m-%d").date()) for date_str in completed_dates},
             reverse=True
-        )
+        ) # List
 
         # If no unique week starts, return 0 streak
         if not unique_week_starts:
@@ -338,7 +332,9 @@ class Habit:
         """
         db = db if db else HabitDatabase()  # Initialize database connection
 
-        habit_exists = db._db_habit_exists(habit_id)
+        habit_exists = db.db_habit_exists(habit_id)
         return habit_exists
 
-   
+
+
+    

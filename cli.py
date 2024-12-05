@@ -114,7 +114,7 @@ def cli_mark_habit_completed():
             for habit in habits:
                 if habit.habit_id == habit_id:
                     habit.record_completion(completed_date=completed_date)
-                    click.echo(f"\n-----Habit {habit_id} - ''{habit.name}''was completed on {completed_date}----\n")
+                    click.echo(f"\n-----Habit {habit_id} - '{habit.name}' was completed on {completed_date}----\n")
         except Exception as e:
             click.echo(f"\nHabit could not be marked completed: {e}")
             return
@@ -227,7 +227,7 @@ def analysation_mode():
                     click.echo("    2. Check for worst performing habit(s)")
                     click.echo("    3. View all habits")
                     click.echo("    4. View a habit's information")
-                    click.echo("    5. View habits based on perodicity")
+                    click.echo("    5. View habits based on periodicity")
                     click.echo("    6. Return to main menu")
                     click.echo("    7. Exit\n")
 

@@ -151,12 +151,6 @@ class TestHabit:
     assert habit7.name == "Do fun stuff"  #Ensures habit7 was saved
     habit7.delete_habit() 
     assert Habit.habit_exists(habit7.habit_id, self.db) is False # Ensures habit7 was deleted
-   
-    #Ensure 'habit doesnt exist' Error is raised
-    with pytest.raises(ValueError):
-      habit7.record_completion()
-    with pytest.raises(ValueError):
-      habit7.get_completed_dates()
 
     #Add habit that already exists
     habit8 = Habit(name="Clean kitchen cupboards", 

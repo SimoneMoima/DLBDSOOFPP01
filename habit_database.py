@@ -5,6 +5,7 @@ from datetime import date, datetime
 class HabitDatabase:
 
     def __init__(self, db_name="main.db"):
+        """Initialize the database"""
         self.db_name = db_name
         self.db = None
         self.connect()
@@ -31,7 +32,7 @@ class HabitDatabase:
         """
         try:
             self.db = sqlite3.connect(self.db_name)
-            self.db.execute("PRAGMA foreign_keys = ON")
+            self.db.execute("PRAGMA foreign_keys = ON")  #Enforce referential integrity
             self.create_table()
         except sqlite3.Error as e:
             print(f"Error connecting to the database:{e}")
@@ -39,7 +40,8 @@ class HabitDatabase:
     def create_table(self):
         """Create the habit and tracker tables.
         """
-        self.execute_query('''CREATE TABLE IF NOT EXISTS habit (
+        self.execute_query(
+            '''CREATE TABLE IF NOT EXISTS habit (
                         id INTEGER PRIMARY KEY AUTOINCREMENT, 
                         name TEXT NOT NULL, 
                         description TEXT NOT NULL,
@@ -48,19 +50,22 @@ class HabitDatabase:
                         creation_time TEXT NOT NULL,
                         longest_streak INTEGER DEFAULT 0,
                         current_streak INTEGER DEFAULT 0
-                    )''')
-        self.execute_query('''CREATE TABLE IF NOT EXISTS tracker (
+                        )'''
+            )
+        self.execute_query(
+            '''CREATE TABLE IF NOT EXISTS tracker (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         habit_id INTEGER,
                         completed_date TEXT,
                         completed_time TEXT,
                         FOREIGN KEY(habit_id) REFERENCES habit(id)
-                    )''')
+                        )'''
+            )
        
     def db_clear_tables(self):
         """Clears all data from habit and tracker tables, and reset id"""
-        self.execute_query("DELETE FROM tracker")
-        self.execute_query("DELETE FROM habit")
+        self.execute_query('DELETE FROM tracker')
+        self.execute_query('DELETE FROM habit')
         self.execute_query("UPDATE sqlite_sequence SET seq=0 WHERE name='habit'")
         self.execute_query("UPDATE sqlite_sequence SET seq=0 WHERE name='tracker'")
         
@@ -77,12 +82,15 @@ class HabitDatabase:
         Returns:
             habit_id(int): returns the primary key (id) of the created habit.
         """
-        cur = self.execute_query('''INSERT INTO habit (name, description, periodicity, creation_date, creation_time)
-                       VALUES (?, ?, ?, ?,?)''', (name, description, periodicity, creation_date, creation_time))
+        cur = self.execute_query(
+            '''INSERT INTO habit (name, description, periodicity, creation_date, creation_time)
+                VALUES (?, ?, ?, ?,?)''', 
+            (name, description, periodicity, creation_date, creation_time)
+        )
         
         return cur.lastrowid if cur else None
     
-    def _db_habit_exists(self, habit_id):
+    def db_habit_exists(self, habit_id):
         """Checks if a habit exists
 
         Args:
@@ -91,7 +99,10 @@ class HabitDatabase:
         Returns:
             bool: True if habit exists
         """
-        cur = self.execute_query("SELECT 1 FROM habit WHERE id = ?", (habit_id,))
+        cur = self.execute_query(
+            "SELECT 1 FROM habit WHERE id = ?", 
+            (habit_id,)
+            )
         if cur is None:
             print("Query execution failed.")
         result =cur.fetchone()
@@ -103,10 +114,16 @@ class HabitDatabase:
         Args:
             habit_id (int): internal database habit id
         """
-        self.execute_query('DELETE FROM tracker WHERE habit_id=?',(habit_id,))
-        self.execute_query('DELETE FROM habit WHERE id=?', (habit_id,))
+        self.execute_query(
+            'DELETE FROM tracker WHERE habit_id=?',
+            (habit_id,)
+            )
+        self.execute_query(
+            'DELETE FROM habit WHERE id=?', 
+            (habit_id,)
+            )
             
-    def _db_check_duplicate(self, name, periodicity):
+    def db_check_duplicate(self, name, periodicity):
         """Check if a habit with the given name exists in the database.
 
         Args:
@@ -116,7 +133,10 @@ class HabitDatabase:
             tuple or None: Returns habit data if a duplicate exists, None otherwise.
         """
        
-        cur = self.execute_query("SELECT * FROM habit WHERE name = ? AND periodicity =?", (name, periodicity,))
+        cur = self.execute_query(
+            'SELECT * FROM habit WHERE name = ? AND periodicity =?', 
+            (name, periodicity,)
+            )
         return cur.fetchone()  
 
     def db_get_habit_by_id(self, habit_id):
@@ -128,7 +148,10 @@ class HabitDatabase:
         Returns:
            tuple or None: A tuple representing the habit record if found, or else None
         """
-        cur = self.execute_query('SELECT * FROM habit WHERE id =?',(habit_id,))
+        cur = self.execute_query(
+            'SELECT * FROM habit WHERE id =?',
+            (habit_id,)
+            )
         return cur.fetchone() if cur else None
 
     def db_get_all_habits(self):
@@ -140,7 +163,7 @@ class HabitDatabase:
         cur = self.execute_query('SELECT * FROM habit')
         return cur.fetchall() if cur else None
 
-    def db_update(self, habit_id, name= None, description=None, periodicity=None, longest_streak = None, current_streak = None):
+    def db_update(self, habit_id, name= None, description=None, periodicity=None):
         """Update a habit's description or periodicity.
 
         Args:
@@ -148,28 +171,48 @@ class HabitDatabase:
         name (str, optional): New name of the habit. Defaults to None.
         description (str, optional): New description. Defaults to None.
         periodicity (str, optional): New periodicity. Defaults to None.
-        longest_streak (int, optional): New longest streak. Defaults to None.
-        current_streak (int, optional): New current streak. Defaults to None.
         """
-        if not habit_id:
+        # Check if habit exists
+        if not self.db_habit_exists(habit_id):
             print("Invalid habit id.")
             return 
-
-        cur = self.execute_query('SELECT longest_streak, current_streak FROM habit WHERE id = ?', (habit_id,))
-        current_data = cur.fetchone()
         
+        if name: # Update habit name
+            self.execute_query(
+                'UPDATE habit SET name=? WHERE id=?', 
+                (name, habit_id)
+                )
+        if description: # Update habit description
+            self.execute_query(
+                'UPDATE habit SET description=? WHERE id=?', 
+                (description, habit_id)
+                )
+        if periodicity: # Update habit periodicity
+            self.execute_query(
+                'UPDATE habit SET periodicity=? WHERE id=?', 
+                (periodicity, habit_id)
+                )
+    
+    def db_update_streak(self, habit_id, current_streak: int = None, longest_streak: int = None):
+        # get current streak data
+        cur = self.execute_query(
+            'SELECT longest_streak, current_streak FROM habit WHERE id = ?', 
+            (habit_id,)
+            )
+        current_data = cur.fetchone()
+        #Check if streak data is not equal or empty, then update 
         if current_data:
             current_longest_streak, current_current_streak = current_data
             if longest_streak is not None and longest_streak != current_longest_streak:
-                self.execute_query('''UPDATE habit SET longest_streak=? WHERE id=?''', (longest_streak, habit_id))
+                self.execute_query(
+                    'UPDATE habit SET longest_streak=? WHERE id=?', 
+                    (longest_streak, habit_id)
+                    )
             if current_streak is not None and current_streak != current_current_streak:
-                self.execute_query('''UPDATE habit SET current_streak=? WHERE id=?''', (current_streak, habit_id))
-        if name:
-            self.execute_query('''UPDATE habit SET name=? WHERE id=?''', (name, habit_id))
-        if description:
-            self.execute_query('''UPDATE habit SET description=? WHERE id=?''', (description, habit_id))
-        if periodicity:
-            self.execute_query('''UPDATE habit SET periodicity=? WHERE id=?''', (periodicity, habit_id))
+                self.execute_query(
+                    'UPDATE habit SET current_streak=? WHERE id=?', 
+                    (current_streak, habit_id)
+                    )
 
     def db_record_completion(self, habit_id, completed_date=None, completed_time=None):
         """Mark a habit as completed for a specific date and time.
@@ -179,26 +222,30 @@ class HabitDatabase:
             completed_date (str, optional): _description_. Defaults to None.
             completed_time (str, optional): _description_. Defaults to None.
         """
-#        print("inside db-record-completion in habit_database")
-        if not self._db_habit_exists(habit_id):
+        # check if habit exists by id
+        if not self.db_habit_exists(habit_id):
             raise ValueError(f"\n Habit with id {habit_id} does not exists")
         
+        # If date and time are not given, save current date and time
         if not completed_date:
             completed_date = str(date.today())
         if not completed_time:
             completed_time = str(datetime.now().time().replace(microsecond=0))  # Get current time without microseconds
         
-        # Check if theres already a record for the habit on the given date
+        # Check if theres already a record of completion for the habit on the given date
         cur = self.execute_query(
-            'SELECT 1 FROM tracker WHERE habit_id = ? AND completed_date = ?',
-            (habit_id, completed_date)
-            )
+                'SELECT 1 FROM tracker WHERE habit_id = ? AND completed_date = ?',
+                (habit_id, completed_date)
+               )
         if cur.fetchone():
             print(f"You already completed the habit with habit id({habit_id}) today.")
             return False 
-
-        self.execute_query('''INSERT INTO tracker (habit_id, completed_date, completed_time)
-                    VALUES (?, ?, ?)''', (habit_id, completed_date, completed_time))
+        # Save the completion date and time in the tracker table
+        self.execute_query(
+            '''INSERT INTO tracker (habit_id, completed_date, completed_time)
+                VALUES (?, ?, ?)''', 
+                (habit_id, completed_date, completed_time)
+        )
             
     def db_get_completed_dates(self, habit_id):
         """Retrieve all completed dates for a habit.
@@ -207,16 +254,23 @@ class HabitDatabase:
             habit_id (int): internal database habit id
 
         Returns:
-          List of completed dates
+           List [str]: List of completed dates
         """
-        if not self._db_habit_exists(habit_id):
+        # Check if habit exists by id
+        if not self.db_habit_exists(habit_id):
             raise ValueError(f"\n Habit with id {habit_id} does not exists")
         
-        cur = self.execute_query('SELECT completed_date FROM tracker WHERE habit_id=?', (habit_id,))
+        # SQL query to get all the completed dates from the given habit by id
+        cur = self.execute_query(
+            '''SELECT completed_date FROM tracker WHERE habit_id=?''', 
+            (habit_id,)
+            )
         rows = cur.fetchall()
+        # Return if the habit has not been completed yes.
         if not rows:
             print(f"No completed records found for habit_id {habit_id}.")
             return[]
+        # Save all retrieved dates in a list and return it
         completed_dates = [row[0] for row in rows]
         return completed_dates
 
@@ -226,7 +280,7 @@ class HabitDatabase:
         try:
             if self.db:
                 self.db.close()
-                self.db =None
+                self.db =None # Reset to default
                 print("Database connection closed")
         except sqlite3.Error as e:
             print(f"Error closing the database: {e}")
