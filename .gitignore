@@ -1,5 +1,6 @@
 #Ignore Database files
-*.db
+test.db
+main.db
 
 # Ignore Python cache
 __pychahe__/
