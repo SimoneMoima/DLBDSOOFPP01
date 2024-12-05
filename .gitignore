@@ -3,7 +3,7 @@ test.db
 main.db
 
 # Ignore Python cache
-__pychahe__/
+__pycache__/
 
 # Ignore vscode foler
 .vscode
