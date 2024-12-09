@@ -25,7 +25,7 @@ def cli_add_habit():
    while True: 
         name = click.prompt("Please enter a habit name ", type=str)
         description = click.prompt("Please give a short description", type=str)
-        periodicity = click.prompt("Please choose between daily or weekly habit", type=str)
+        periodicity = click.prompt("Please choose between daily, weekly or monthly habit", type=str)
         
         habit = Habit(name=name, description=description, periodicity=periodicity)
         habit.save()
@@ -67,18 +67,17 @@ def cli_update_habit():
                 if click.confirm("\nWould you like to change the periodicity?"):
                     while True:
                         new_periodicity = click.prompt("Please enter the new periodicity", type=str)
-                        valid_periodicities={'daily', 'weekly'}
+                        valid_periodicities={'daily', 'weekly', 'monthly'}
                         if new_periodicity in valid_periodicities:
                             habit.update(periodicity = new_periodicity)
                             break
                         else:
-                            click.echo("Please enter a correct periodicity: 'daily' or 'weekly'")
+                            click.echo("Please enter a correct periodicity: 'daily', 'weekly' or 'monthly")
                 analysis_1.a1_print_habit(habit)
         
         if not click.confirm("\nWould you like update other habits?", default =False):
             click.echo("\n-----Exiting - Returning to Main Menu------")
             break
-
 
 def cli_print_all_habits():
     """Function that prints all saved habits"""
@@ -185,6 +184,35 @@ def _cli_print_weekly_habits():
     habits = Habit.get_all_habits()
     analysis_1.a1_print_habits_by_periodicity(habits,'weekly')
 
+def cli_print_all_longest_streaks():
+    """Print longest streaks of all habits
+    """
+    habits = Habit.get_all_habits()
+    analysis_1.a1_print_longest_streak(habits)
+
+def cli_print_habit_streaks():
+
+    while True:
+        habits = Habit.get_all_habits()
+
+        click.echo("\nHere are your current habits:")
+        for habit in habits:
+            click.echo(f"Habit id: {habit.habit_id}, Name: {habit.name}")
+        
+        while True:
+            habit_id = click.prompt("\nPlease enter the id of the habit you would like to view", type=int) 
+            if Habit.habit_exists(habit_id):
+                break
+            else:
+                print(f"\nHabit with id {habit_id} doesn't exist. Please try again.")
+
+        habit = Habit.get_by_id(habit_id)
+        analysis_1.a1_print_streaks(habit)
+
+        if not click.confirm("Would you like to view another habit?"):
+            click.echo("Returning to Main menu.")
+            break
+
 @cli.command()
 def main_menu():
     """Start Main Menu for managing habits"""
@@ -228,10 +256,12 @@ def analysation_mode():
                     click.echo("    3. View all habits")
                     click.echo("    4. View a habit's information")
                     click.echo("    5. View habits based on periodicity")
-                    click.echo("    6. Return to main menu")
-                    click.echo("    7. Exit\n")
+                    click.echo("    6. View streak data of a habit")
+                    click.echo("    7. View all my longest streaks")
+                    click.echo("    8. Return to main menu")
+                    click.echo("    9. Exit\n")
 
-                    choice_2 = click.prompt("Please enter your choice (1-7)", type=int)
+                    choice_2 = click.prompt("Please enter your choice (1-9)", type=int)
                     
                     if choice_2 == 1:
 
@@ -253,11 +283,17 @@ def analysation_mode():
                         cli_print_periodicity()
 
                     elif choice_2== 6:
-                        break
+                        cli_print_habit_streaks()
 
                     elif choice_2 == 7:
+                        cli_print_all_longest_streaks()
+                    
+                    elif choice_2 == 8:
+                        return
+                    
+                    elif choice_2 == 9:
                         exit_app()
-                        
+
                     else:
                         click.echo("Invalid choice. Please enter a number between 1 and 6.")
                         continue

@@ -88,7 +88,7 @@ class HabitDatabase:
             (name, description, periodicity, creation_date, creation_time)
         )
         
-        return cur.lastrowid if cur else None
+        return cur.lastrowid 
     
     def db_habit_exists(self, habit_id):
         """Checks if a habit exists
@@ -97,16 +97,18 @@ class HabitDatabase:
             habit_id (int): Internal habit id
 
         Returns:
-            bool: True if habit exists
+            bool: True if habit exists. False otherwise
         """
         cur = self.execute_query(
             "SELECT 1 FROM habit WHERE id = ?", 
             (habit_id,)
             )
         if cur is None:
-            print("Query execution failed.")
+            return False
+        
         result =cur.fetchone()
-        return result is not None
+
+        return result 
     
     def db_delete_habit(self, habit_id):
         """Delete a habit using its ID.
@@ -148,20 +150,35 @@ class HabitDatabase:
         Returns:
            tuple or None: A tuple representing the habit record if found, or else None
         """
+        # Check if habit exists by id
+        if not self.db_habit_exists(habit_id):
+            raise ValueError(f"\n Habit with id {habit_id} does not exists")
+        
+        #SQL qery to get the habits information
         cur = self.execute_query(
             'SELECT * FROM habit WHERE id =?',
             (habit_id,)
             )
-        return cur.fetchone() if cur else None
+        
+        return cur.fetchone() 
 
     def db_get_all_habits(self):
         """Retrieve all habits.
 
         Returns:
-            List[Habit]: returns a list with all database entries for all habits
+            List[Habit]: returns a list with all informaion for all habits
         """
+        #SQL query to get all habit data
         cur = self.execute_query('SELECT * FROM habit')
-        return cur.fetchall() if cur else None
+        
+        #return if there are no habits
+        if not cur: 
+            print("No habits found in the database.")
+            return []
+        
+        all_habits = cur.fetchall()
+
+        return all_habits
 
     def db_update(self, habit_id, name= None, description=None, periodicity=None):
         """Update a habit's description or periodicity.
@@ -194,6 +211,13 @@ class HabitDatabase:
                 )
     
     def db_update_streak(self, habit_id, current_streak: int = None, longest_streak: int = None):
+        """Updates the streak data in the database (current and longest)
+
+        Args:
+            habit_id (int): habit id of completed habit
+            current_streak (int, optional): Current streak of a habit. Defaults to None.
+            longest_streak (int, optional): longest streak of a habit. Defaults to None.
+        """
         # get current streak data
         cur = self.execute_query(
             'SELECT longest_streak, current_streak FROM habit WHERE id = ?', 
@@ -221,6 +245,8 @@ class HabitDatabase:
             habit_id (int): _description_
             completed_date (str, optional): _description_. Defaults to None.
             completed_time (str, optional): _description_. Defaults to None.
+        Raises:
+            Value Error: Habit doesnt exist
         """
         # check if habit exists by id
         if not self.db_habit_exists(habit_id):
@@ -255,6 +281,9 @@ class HabitDatabase:
 
         Returns:
            List [str]: List of completed dates
+        
+        Raises: 
+            Value Error: Habit doesnt exist.
         """
         # Check if habit exists by id
         if not self.db_habit_exists(habit_id):
@@ -266,7 +295,7 @@ class HabitDatabase:
             (habit_id,)
             )
         rows = cur.fetchall()
-        # Return if the habit has not been completed yes.
+        # Return if the habit has not been completed yet.
         if not rows:
             print(f"No completed records found for habit_id {habit_id}.")
             return[]

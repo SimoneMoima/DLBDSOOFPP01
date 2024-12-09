@@ -18,7 +18,8 @@ class TestHabit:
                   description="drink at least one cup of healthy tea a day", 
                   periodicity="daily", 
                   creation_date="2024-10-31",
-                  db=self.db)
+                  db=self.db
+                  )
     habit.save()
     habit.record_completion(str(date.today()-timedelta(days=6)) , "17:30:16")
     habit.record_completion(str(date.today()-timedelta(days=5)), "16:38:58")
@@ -42,7 +43,8 @@ class TestHabit:
                    description="Run 5km", 
                    periodicity="weekly", 
                    creation_date="2024-11-01", 
-                   db=self.db)
+                   db=self.db
+                   )
     habit2.save()
     habit2.record_completion(str(date.today()-timedelta(weeks=7)), "09:12:56") 
     habit2.record_completion(str(date.today()-timedelta(weeks=6)), "09:12:56") 
@@ -58,7 +60,8 @@ class TestHabit:
                    description="clean the inside of the kitchen cupboards", 
                    periodicity="weekly", 
                    creation_date="2024-09-18",
-                   db=self.db)
+                   db=self.db
+                   )
     habit3.save()  
     habit3.record_completion(str(date.today()-timedelta(weeks=5)),"17:30:16")
     habit3.record_completion(str(date.today()-timedelta(weeks=4)), "16:38:58")
@@ -73,7 +76,8 @@ class TestHabit:
                    description="Brush my dogs hair once a day", 
                    periodicity="daily", 
                    creation_date="2024-11-11", 
-                   db=self.db)
+                   db=self.db
+                   )
     habit4.save()  
     habit4.record_completion(str(date.today()-timedelta(days=4)),"17:30:16")
     habit4.record_completion(str(date.today()-timedelta(days=3)), "16:38:58")
@@ -88,7 +92,8 @@ class TestHabit:
                    "Meditate for 15 minutes a day", 
                    "daily", "2024-10-13", 
                    None, 
-                   self.db)
+                   self.db
+                   )
     habit5.save() 
     habit5.record_completion("2024-10-13", "12:06:06")
     habit5.record_completion(str(date.today()-timedelta(days=4)),"17:30:16")
@@ -98,6 +103,18 @@ class TestHabit:
     habit5.record_completion(str(date.today()-timedelta(days=1)), "12:06:06")
     habit5.record_completion()
     habit5.calculate_daily_streak()
+
+    
+    #Habit 8 - Monthly 
+    habit8 = Habit("Clean cupboard", 
+                   "Clean all kitchen cupboards, dont forget to take out all dishes",
+                   "monthly",
+                   None,
+                   None,
+                   self.db
+                   )
+    habit8.save()
+    habit8.record_completion() 
 
     #Habit 6 - Daily / Not completed, streak = 0
     habit6 = Habit("Sleep 8 hours", 
@@ -133,6 +150,7 @@ class TestHabit:
                    db=self.db)
     with pytest.raises(ValueError):
       habit7.save()
+
     #Test update function
     habit2.update(name = "Run",
                   description= "Run 4km in a week.",
@@ -162,7 +180,7 @@ class TestHabit:
       habit8.save()
 
     #Test __str__ function
-    print(habit6.__str__)
+    print(habit6.__str__())
 
     #Test analytics module
     all_habit_data = Habit.get_all_habits(self.db)
@@ -170,6 +188,7 @@ class TestHabit:
     analysis_1.a1_print_worst_performing_habit(all_habit_data)
     analysis_1.a1_print_habits_by_periodicity(all_habit_data, 'daily')
     analysis_1.a1_print_habits_by_periodicity(all_habit_data, 'weekly')
-    analysis_1.a1_print_longest_streak(habit)
+    analysis_1.a1_print_habits_by_periodicity(all_habit_data, 'monthly')
+    analysis_1.a1_print_longest_streak(all_habit_data)
     analysis_1.a1_print_all_habits(all_habit_data)
     

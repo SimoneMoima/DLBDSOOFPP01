@@ -1,3 +1,4 @@
+from calendar import Day
 from typing import List
 from habit import Habit
 
@@ -62,11 +63,13 @@ def a1_print_best_perfroming_habit(habits: List['Habit']):
         elif streak == longest_streak:
             best_performing_habit.append(habit)
 
+
     if best_performing_habit:
         print("\nYour best performing habit(s) are: ")
         print("--------------------------------------")
         for i,habit in enumerate(best_performing_habit, start=1):
-            print(f"{i}. '{habit.name}' with a streak of {habit.longest_streak} days.")
+            period = _transform_periodicity(habit.longest_streak, habit.periodicity)
+            print(f"{i}. '{habit.name}' with a streak of {habit.longest_streak} {period}.")
         print("---------------End--------------------")
         print("\n")
         
@@ -89,7 +92,6 @@ def a1_print_worst_performing_habit(habits: List['Habit']):
 
     for habit in habits:
         streak = habit.longest_streak
-
         if streak < shortest_streak:
             shortest_streak = streak
             worst_performing_habit = [(habit)]
@@ -100,27 +102,59 @@ def a1_print_worst_performing_habit(habits: List['Habit']):
         print("\nYour worst performing habit(s) are: ")
         print("--------------------------------------")
         for i, habit in enumerate(worst_performing_habit, start=1):
-            print(f"{i}. '{habit.name}' with a streak of {habit.longest_streak} days.")
+            period = _transform_periodicity(habit.longest_streak, habit.periodicity)
+            print(f"{i}. '{habit.name}' with a streak of {habit.longest_streak} {period}.")
 
         print("-----------------End------------------")
         print("\n")
 
-def a1_print_longest_streak(habit):
+def _transform_periodicity(streak, periodicity):
+    """Helper function to print periodicities correctly
+        monthly -> month(s)
+        daily -> day(s)
+        weekly -> week(S)
+        if streak > 1 an 's' is added
+
+    Args:
+        streak (int): streak data as integer
+        periodicity (str): periodicity of the habit
+
+    Returns:
+        str: week(s), day(s), month(s) accordingly
     """
-    Prints out the longest current streak of a given habit
+
+    if streak == 1:
+        if periodicity == 'weekly':
+            period = 'week'
+        elif periodicity == 'daily':
+            period = 'day'
+        elif periodicity == 'monthly':
+            period = 'month'
+    else:
+        if periodicity == 'weekly':
+            period = 'weeks'
+        elif periodicity == 'daily':
+            period = 'days'
+        elif periodicity == 'monthly':
+            period = 'months'
+    return period
+
+def a1_print_longest_streak(habits: List['Habit']):
+    """
+    Prints out the longest streaks of all habits
 
     Args:
         habit (Habit): Habit whose streak should be printed out
     """
-    if habit.periodicity == 'weekly':
-        local_periodicity = 'weeks'
-    elif habit.periodicity == 'daily':
-        local_periodicity = 'days'
+    print("\nYour longest streaks are:")
+    for habit in habits:
 
-    if habit.longest_streak == 0:
-        print("\nYou have not completed this habit yet. Try harder!")
-    else:
-        print(f"\nYour longest streak for '{habit.name}' is {habit.longest_streak} {local_periodicity}")
+        period = _transform_periodicity(habit.longest_streak, habit.periodicity)
+
+        if habit.longest_streak == 0:
+            print(f"\n '{habit.name}': You have not completed this habit yet. Try harder, you can do it!")
+        else:
+            print(f"\n '{habit.name}': {habit.longest_streak} {period}")
 
 def a1_print_habits_by_periodicity(habits: List['Habit'], wanted_periodicity: str):
     """
@@ -130,8 +164,8 @@ def a1_print_habits_by_periodicity(habits: List['Habit'], wanted_periodicity: st
         habits (List[Habit]): List of all current habits
         wanted_periodicity (str): Either 'daily' or 'weekly'
     """
-    if wanted_periodicity not in ('weekly','daily') :
-        print("\nPlease enter either weekly or daily\n")
+    if wanted_periodicity not in ('weekly','daily', 'monthly') :
+        print("\nPlease enter either weekly, monthly or daily\n")
         return
     
     filter_habits = [habit for habit in habits if habit.periodicity == wanted_periodicity]
@@ -149,5 +183,20 @@ def a1_print_habits_by_periodicity(habits: List['Habit'], wanted_periodicity: st
     print("-----------------End------------------")
     print("\n")
 
+def a1_print_streaks(habit):
+    """Function to print the current and longest streak of a habit
 
+    Args:
+        habit (List): habit that should be displayed
+    """
+     
+    period_current = _transform_periodicity(habit.current_streak, habit.periodicity)
+    period_longest = _transform_periodicity(habit.longest_streak, habit.periodicity)
+    if habit.current_streak == 0:
+        print("\nYou have not completed this habit yet. Try harder, you can do it!\n")
+    else:
+        print("--------------------------------------")
+        print(f"\nYour current streak of '{habit.name}' is {habit.current_streak} {period_current}.")
+        print(f"Your longest streak of '{habit.name}' is {habit.longest_streak} {period_longest} ")
+        print("--------------------------------------")
 

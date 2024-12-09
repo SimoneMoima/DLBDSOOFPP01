@@ -51,7 +51,7 @@ class Habit:
         Raises:
             ValueError: Wrong periodicity entered. Must be daily or weekly
         """
-        valid_periodicities={'daily', 'weekly'}
+        valid_periodicities={'daily', 'weekly', 'monthly'}
         if periodicity not in valid_periodicities:
             raise ValueError(f"Invalid periodicity: {periodicity}. Must be {valid_periodicities}")
           
@@ -90,6 +90,18 @@ class Habit:
         
         if duplicate:
             raise ValueError(f"\n The'{self.periodicity}' habit '{self.name}' already exists.")
+    
+    @classmethod
+    def habit_exists(self, habit_id: int, db=None):
+        """checks if habit exists
+
+        Returns:
+            bool: true if habit exists
+        """
+        db = db if db else HabitDatabase()  # Initialize database connection
+
+        habit_exists = db.db_habit_exists(habit_id)
+        return habit_exists
 
     def save(self):
         """Save the habit in the database, current date and time are automatically added
@@ -159,6 +171,8 @@ class Habit:
             self.calculate_daily_streak()
         elif self.periodicity == 'weekly':
             self.calculate_weekly_streak()
+        elif self.periodicity == 'monthly':
+            self.calculate_monthly_streak()
 
     def _get_completed_dates(self):
         """Retrieve all completion dates for the habit by internal id
@@ -284,11 +298,17 @@ class Habit:
         self._update_current_streak(streak)
 
         
-    def _get_week_start(self,day: date) -> date:
-        """Helper function to get the start of the week (e.g., Monday) for a given date.
+    def _get_mondays(self,day: date):
+        """Helper function to get the start of the week for a given date.
         Args:
-             day(date): get the start of the week of given day 
+             day(datetime.date()): given date
+        Retruns: 
+             datetime.day(): Monday of the week of the day that was given
         """
+        # The day.weekday() function returns the given weekday as an integer (Wednesday = 2)
+        # Timedelta creates a time duration of the returned integer (timedelta = 2 days) and
+        # subtracts it from the given day.
+        # This will always return the Monday of the week.
         return day - timedelta(days=day.weekday())
 
     def calculate_weekly_streak(self):
@@ -299,23 +319,23 @@ class Habit:
         """
 
         completed_dates = self._get_completed_dates() # get completed dates from the database
-        unique_week_starts = sorted(
-            {self._get_week_start(datetime.strptime(date_str, "%Y-%m-%d").date()) for date_str in completed_dates},
+        mondays = sorted(
+            {self._get_mondays(datetime.strptime(date, "%Y-%m-%d").date()) for date in completed_dates},
             reverse=True
-        ) # List
+        ) # Sorted Set of all unique Mondays of the weeks where the habit was completed, this enables an algorithm to check for weekly entries
 
         # If no unique week starts, return 0 streak
-        if not unique_week_starts:
+        if not mondays:
             return 0
 
         streak = 0
-        current_week_start = self._get_week_start(date.today())
+        current_monday = self._get_mondays(date.today())
 
         # Calculate streak by checking consecutive weeks in the sorted list
-        for week_start in unique_week_starts:
-            if current_week_start == week_start:
+        for monday in mondays:
+            if current_monday == monday:
                 streak += 1
-                current_week_start -= timedelta(weeks=1)  
+                current_monday -= timedelta(weeks = 1)  #subtract a week and set for next comparison
             else:
                 break  # Streak is broken if there’s a gap
 
@@ -323,17 +343,39 @@ class Habit:
         self._update_current_streak(streak)
         return streak
     
-    @classmethod
-    def habit_exists(self, habit_id: int, db=None):
-        """checks if habit exists
+    
+    def calculate_monthly_streak(self):
+        """Function to calculate monthly streaks
 
         Returns:
-            bool: true if habit exists
+            int: calculated streak
         """
-        db = db if db else HabitDatabase()  # Initialize database connection
 
-        habit_exists = db.db_habit_exists(habit_id)
-        return habit_exists
+        completed_dates = self._get_completed_dates()
+
+        years_months = sorted({(datetime.strptime(date, "%Y-%m-%d").year, datetime.strptime(date, "%Y-%m-%d").month) for date in completed_dates}, 
+               reverse=True
+               ) # Set of sorted and unique (year, month) pairs
+        print(years_months)
+        print(type(years_months))
+
+        streak = 0
+        previous = None
+
+        for year, month in years_months:
+            # In first iteration, previous is None. Then year and month of the first entry are added
+            # Check if next month is contained, or check if there was a change in year -> add to streak else leave for loop
+            if previous is None or (year == previous[0] and month == previous[1]+1) or (year == previous[0]+1 and month == 1 and previous[1] == 12):
+                streak += 1
+                previous = (year, month) # Update year and month
+            else:
+                break # Streak is broken if there is a gap
+
+        self._update_current_streak(streak)
+        self._update_longest_streak(streak)
+
+        return streak
+
 
 
 
