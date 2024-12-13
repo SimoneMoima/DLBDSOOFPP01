@@ -1,4 +1,3 @@
-from calendar import Day
 from typing import List
 from habit import Habit
 
@@ -40,7 +39,6 @@ def a1_print_habit(habit):
         print(f"Longest Streak: {habit.longest_streak}")
         print("-----------------------------------")
         print("\nEnd of Habit Record\n")
-
 
 def a1_print_best_perfroming_habit(habits: List['Habit']):
     """

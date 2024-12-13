@@ -142,6 +142,21 @@ class Habit:
             self._correct_periodicity(self.periodicity) # Check if periodicity was entered correctly
         if self.habit_id: # Call update function 
             self.db.db_update(self.habit_id, name=name, description=description, periodicity=periodicity)
+    @staticmethod
+    def correct_date_format(completed_date: str):
+        try:
+            datetime.strptime(completed_date, "%Y-%m-%d")
+            return True
+        except ValueError:
+            return False
+        
+    @staticmethod
+    def correct_time_format(completed_time: str):
+         try:
+            datetime.strptime(completed_time, "%H:%M:%S")
+            return True
+         except ValueError:
+             return False
 
     def record_completion(self, completed_date: str = None, completed_time: str = None):
         """Marks a habit as completed 
@@ -154,17 +169,17 @@ class Habit:
             ValueError: Habit has not been saved to database no id was set
         """
         #If date and time are empty, use current date and time
-        if not completed_date:
+        if completed_date is None:
             completed_date = str(date.today())
-        if not completed_time:
+        if completed_time is None:
             completed_time = str(datetime.now().time().replace(microsecond=0))
        
         #Ensure habit_id is set
         if not self.habit_id:
             raise ValueError("\nHabit must be saved before completed")
         
-        self.db.db_record_completion(self.habit_id, completed_date, completed_time)
-        
+        self.db.db_record_completion(self.name, self.habit_id, completed_date, completed_time)
+
         #Automatically calculate and save streak data
         if self.periodicity == 'daily':
             self.calculate_daily_streak()
@@ -357,6 +372,7 @@ class Habit:
 
         years_months = sorted({(datetime.strptime(date, "%Y-%m-%d").year, datetime.strptime(date, "%Y-%m-%d").month) for date in completed_dates}, 
               reverse= True ) # Set of sorted and unique (year, month) pairs
+        print(years_months)
         
         for year, month in years_months:
             # In first iteration, previous is None. Then year and month of the first entry are added

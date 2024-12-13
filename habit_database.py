@@ -239,7 +239,29 @@ class HabitDatabase:
                     (current_streak, habit_id)
                     )
 
-    def db_record_completion(self, habit_id, completed_date=None, completed_time=None):
+    def db_already_marked_completed(self,name, habit_id, completed_date):
+        """check if a habit was already marked completed on a given day.
+
+        Args:
+            name (str): _name of habit
+            habit_id (int): habit id
+            completed_date (str): completion date
+
+        Returns:
+            bool: True if the habit already exists and False otherwise
+        """
+        cur = self.execute_query(
+                'SELECT 1 FROM tracker WHERE habit_id = ? AND completed_date = ?',
+                (habit_id, completed_date)
+               )
+        result = cur.fetchone()
+        if result and result[0] == 1:
+            print(f"Habit {habit_id} - '{name}' has already been marked completed today.")
+            return True
+        
+        return False
+
+    def db_record_completion(self, name, habit_id, completed_date: str = None, completed_time: str = None):
         """Mark a habit as completed for a specific date and time.
 
         Args:
@@ -252,27 +274,23 @@ class HabitDatabase:
         # check if habit exists by id
         if not self.db_habit_exists(habit_id):
             raise ValueError(f"\n Habit with id {habit_id} does not exists")
-        
+
         # If date and time are not given, save current date and time
-        if not completed_date:
+        if completed_date is None:
             completed_date = str(date.today())
-        if not completed_time:
+        if completed_time is None:
             completed_time = str(datetime.now().time().replace(microsecond=0))  # Get current time without microseconds
         
-        # Check if theres already a record of completion for the habit on the given date
-        cur = self.execute_query(
-                'SELECT 1 FROM tracker WHERE habit_id = ? AND completed_date = ?',
-                (habit_id, completed_date)
-               )
-        if cur.fetchone():
-            print(f"You already completed the habit with habit id({habit_id}) today.")
-            return False 
-        # Save the completion date and time in the tracker table
-        self.execute_query(
+        #check if habit was marked completed already on the day
+        result = self.db_already_marked_completed(name, habit_id, completed_date)
+ 
+        if not result:
+            self.execute_query(
             '''INSERT INTO tracker (habit_id, completed_date, completed_time)
                 VALUES (?, ?, ?)''', 
                 (habit_id, completed_date, completed_time)
-        )
+            )
+            print(f"\n-----Habit {habit_id} - '{name}' was completed on {completed_date} at {completed_time}----\n")
             
     def db_get_completed_dates(self, habit_id):
         """Retrieve all completed dates for a habit.

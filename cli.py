@@ -4,7 +4,7 @@
 import click
 from habit_database import HabitDatabase
 from habit import Habit
-from datetime import date
+from datetime import date, datetime
 import analysis
 import sys
 
@@ -88,36 +88,44 @@ def cli_print_all_habits():
 
 def cli_mark_habit_completed():
     """Function to mark a habit as completed"""
-    
+    # Get all habits and check that the List is not empty
     while True:
-        
         habits = Habit.get_all_habits()
         if not habits:
             click.echo("\nNo habits found. Please add a habit first.")
             return
-        
+        #Display the habits to choose from
         click.echo("\nHere are your current habits:")
         for habit in habits:
             click.echo(f"Habit id: {habit.habit_id}, Name: {habit.name}")
-        
+        # Enter the id of the habit that was completed and check if it exists
         while True:
             habit_id = click.prompt("\nPlease enter the id of the habit you would like to mark as completed", type=int) 
             if Habit.habit_exists(habit_id):
                 break
             else:
                 print(f"\nHabit with id {habit_id} doesn't exist. Please try again.")
-               
-        completed_date = click.prompt("Enter the completion date (YYYY-MM-DD) or press Enter to use today's date", default=str(date.today()))
-        
-        try:
-            for habit in habits:
-                if habit.habit_id == habit_id:
-                    habit.record_completion(completed_date=completed_date)
-                    click.echo(f"\n-----Habit {habit_id} - '{habit.name}' was completed on {completed_date}----\n")
-        except Exception as e:
-            click.echo(f"\nHabit could not be marked completed: {e}")
-            return
-        
+
+        while True:       
+            cli_completed_date = click.prompt("Enter the completion date (YYYY-MM-DD) or press Enter to use today's date", default=str(date.today()))
+            
+            if Habit.correct_date_format(cli_completed_date):
+                break
+            else:
+                print("Wrong date format. Please enter YYYY-MM-DD")
+        while True:
+            cli_completed_time = click.prompt("Enter the completion time (hh:mm:ss) or press Enter to use the current time.", default=str(datetime.now().time().replace(microsecond=0)))
+            
+            if Habit.correct_time_format(cli_completed_time):
+                break
+            else:
+                print("Wrong time format. Please enter hh:mm:ss")
+
+     
+        for habit in habits:
+            if habit.habit_id == habit_id:
+                habit.record_completion(completed_date = cli_completed_date, completed_time = cli_completed_time)
+       
         if not click.confirm("Would you like to mark another habit as completed?", default =False):
             click.echo("\n-----Exiting - Returning to Main Menu------")
             break
