@@ -5,7 +5,7 @@ import click
 from habit_database import HabitDatabase
 from habit import Habit
 from datetime import date
-import analysis_1
+import analysis
 import sys
 
 db = HabitDatabase()
@@ -73,7 +73,7 @@ def cli_update_habit():
                             break
                         else:
                             click.echo("Please enter a correct periodicity: 'daily', 'weekly' or 'monthly")
-                analysis_1.a1_print_habit(habit)
+                analysis.a1_print_habit(habit)
         
         if not click.confirm("\nWould you like update other habits?", default =False):
             click.echo("\n-----Exiting - Returning to Main Menu------")
@@ -82,7 +82,7 @@ def cli_update_habit():
 def cli_print_all_habits():
     """Function that prints all saved habits"""
     habits = Habit.get_all_habits()
-    analysis_1.a1_print_all_habits(habits)
+    analysis.a1_print_all_habits(habits)
 
     click.prompt("Please press Enter to return to the Menu", default='', show_default= False)
 
@@ -125,14 +125,14 @@ def cli_mark_habit_completed():
 def cli_print_best_performing():
     """Function to print the habits with the longest streak"""
     habits = Habit.get_all_habits()
-    analysis_1.a1_print_best_perfroming_habit(habits)
+    analysis.a1_print_best_perfroming_habit(habits)
 
     click.prompt("Please press Enter to return to the Menu", default='', show_default= False)
         
 def cli_print_worst_performing():
     """Function to print the habits with the shortest streak"""
     habits = Habit.get_all_habits()
-    analysis_1.a1_print_worst_performing_habit(habits)
+    analysis.a1_print_worst_performing_habit(habits)
 
     click.prompt("Please press Enter to return to the Menu", default='', show_default= False)
 
@@ -153,7 +153,7 @@ def cli_print_habit():
                 print(f"\nHabit with id {habit_id} doesn't exist. Please try again.")
 
         habit = Habit.get_by_id(habit_id)
-        analysis_1.a1_print_habit(habit)
+        analysis.a1_print_habit(habit)
 
         if not click.confirm("Would you like to view another habit?"):
                     click.echo("Returning to Main menu.")
@@ -177,18 +177,18 @@ def cli_print_periodicity():
 def _cli_print_daily_habits():
     """Helper function that prints out daily habits"""
     habits = Habit.get_all_habits()
-    analysis_1.a1_print_habits_by_periodicity(habits,'daily')
+    analysis.a1_print_habits_by_periodicity(habits,'daily')
     
 def _cli_print_weekly_habits():
     """ Helper function that prints out weekly habits"""
     habits = Habit.get_all_habits()
-    analysis_1.a1_print_habits_by_periodicity(habits,'weekly')
+    analysis.a1_print_habits_by_periodicity(habits,'weekly')
 
 def cli_print_all_longest_streaks():
     """Print longest streaks of all habits
     """
     habits = Habit.get_all_habits()
-    analysis_1.a1_print_longest_streak(habits)
+    analysis.a1_print_longest_streak(habits)
 
 def cli_print_habit_streaks():
 
@@ -207,7 +207,7 @@ def cli_print_habit_streaks():
                 print(f"\nHabit with id {habit_id} doesn't exist. Please try again.")
 
         habit = Habit.get_by_id(habit_id)
-        analysis_1.a1_print_streaks(habit)
+        analysis.a1_print_streaks(habit)
 
         if not click.confirm("Would you like to view another habit?"):
             click.echo("Returning to Main menu.")

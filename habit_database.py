@@ -103,10 +103,11 @@ class HabitDatabase:
             "SELECT 1 FROM habit WHERE id = ?", 
             (habit_id,)
             )
-        if cur is None:
-            return False
         
-        result =cur.fetchone()
+        result = cur.fetchone()
+
+        if result is None:
+            return False
 
         return result 
     

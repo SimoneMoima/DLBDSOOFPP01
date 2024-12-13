@@ -143,7 +143,6 @@ class Habit:
         if self.habit_id: # Call update function 
             self.db.db_update(self.habit_id, name=name, description=description, periodicity=periodicity)
 
-
     def record_completion(self, completed_date: str = None, completed_time: str = None):
         """Marks a habit as completed 
 
@@ -262,7 +261,6 @@ class Habit:
         self.current_streak = streak
         self.db.db_update_streak(habit_id=self.habit_id, current_streak = streak)
         
-
     def _update_longest_streak(self, streak):
         """Updates the longest streak variable to current streak if it is longer than previouse one
 
@@ -296,8 +294,7 @@ class Habit:
         
         self._update_longest_streak(streak)
         self._update_current_streak(streak)
-
-        
+     
     def _get_mondays(self,day: date):
         """Helper function to get the start of the week for a given date.
         Args:
@@ -342,35 +339,41 @@ class Habit:
         self._update_longest_streak(streak)
         self._update_current_streak(streak)
         return streak
-    
-    
+     
     def calculate_monthly_streak(self):
         """Function to calculate monthly streaks
 
         Returns:
             int: calculated streak
         """
-
-        completed_dates = self._get_completed_dates()
-
-        years_months = sorted({(datetime.strptime(date, "%Y-%m-%d").year, datetime.strptime(date, "%Y-%m-%d").month) for date in completed_dates}, 
-               reverse=True
-               ) # Set of sorted and unique (year, month) pairs
-        print(years_months)
-        print(type(years_months))
-
         streak = 0
         previous = None
 
+        completed_dates = self._get_completed_dates()
+
+        if not completed_dates:
+            print("You have not completed this habit yet.")
+            return
+
+        years_months = sorted({(datetime.strptime(date, "%Y-%m-%d").year, datetime.strptime(date, "%Y-%m-%d").month) for date in completed_dates}, 
+              reverse= True ) # Set of sorted and unique (year, month) pairs
+        
         for year, month in years_months:
             # In first iteration, previous is None. Then year and month of the first entry are added
             # Check if next month is contained, or check if there was a change in year -> add to streak else leave for loop
-            if previous is None or (year == previous[0] and month == previous[1]+1) or (year == previous[0]+1 and month == 1 and previous[1] == 12):
+            if previous is None:
+                print("Inside none")
                 streak += 1
-                previous = (year, month) # Update year and month
-            else:
-                break # Streak is broken if there is a gap
-
+                previous= (year, month)
+            else: 
+                if (year == previous[0] and month == previous[1] - 1) or (year == previous[0] - 1 and month == 12 and previous[1] == 1):
+                    print("inside adding to streak")
+                    streak += 1
+                    previous = (year, month) # Update year and month
+                else:
+                    break # Streak is broken if there is a gap
+        
+        print(streak)
         self._update_current_streak(streak)
         self._update_longest_streak(streak)
 

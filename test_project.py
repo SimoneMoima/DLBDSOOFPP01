@@ -1,4 +1,5 @@
-import analysis_1
+from calendar import month
+import analysis
 from habit_database import HabitDatabase
 from habit import Habit
 from datetime import date, timedelta
@@ -114,7 +115,13 @@ class TestHabit:
                    self.db
                    )
     habit8.save()
+    habit8.record_completion(str(date.today()-timedelta(weeks=16)), "12:06:06")
+    habit8.record_completion(str(date.today()-timedelta(weeks=12)), "12:06:06")
+    habit8.record_completion(str(date.today()-timedelta(weeks=8)), "12:06:06")
+    habit8.record_completion(str(date.today()-timedelta(weeks=4)), "12:06:06")
     habit8.record_completion() 
+
+    assert habit8.longest_streak == 5
 
     #Habit 6 - Daily / Not completed, streak = 0
     habit6 = Habit("Sleep 8 hours", 
@@ -184,11 +191,11 @@ class TestHabit:
 
     #Test analytics module
     all_habit_data = Habit.get_all_habits(self.db)
-    analysis_1.a1_print_best_perfroming_habit(all_habit_data)
-    analysis_1.a1_print_worst_performing_habit(all_habit_data)
-    analysis_1.a1_print_habits_by_periodicity(all_habit_data, 'daily')
-    analysis_1.a1_print_habits_by_periodicity(all_habit_data, 'weekly')
-    analysis_1.a1_print_habits_by_periodicity(all_habit_data, 'monthly')
-    analysis_1.a1_print_longest_streak(all_habit_data)
-    analysis_1.a1_print_all_habits(all_habit_data)
+    analysis.a1_print_best_perfroming_habit(all_habit_data)
+    analysis.a1_print_worst_performing_habit(all_habit_data)
+    analysis.a1_print_habits_by_periodicity(all_habit_data, 'daily')
+    analysis.a1_print_habits_by_periodicity(all_habit_data, 'weekly')
+    analysis.a1_print_habits_by_periodicity(all_habit_data, 'monthly')
+    analysis.a1_print_longest_streak(all_habit_data)
+    analysis.a1_print_all_habits(all_habit_data)
     
