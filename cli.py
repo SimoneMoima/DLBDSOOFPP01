@@ -175,12 +175,14 @@ def cli_print_habit():
 def cli_print_periodicity():
     """Function to print out habits based on their periodicity"""
     while True:
-        choice_3 =click.prompt("\nPlease enter 1 for 'daily' or 2 for 'weekly' habits", type=int)
+        choice_3 =click.prompt("\nPlease enter 1 for 'daily' or 2 for 'weekly' habits or 3 for 'monthly habits", type=int)
 
         if choice_3 == 1:
             _cli_print_daily_habits()
         elif choice_3 == 2:
             _cli_print_weekly_habits()
+        elif choice_3 == 3:
+            _cli_print_monthly_habits()
         else:
             click.echo("Invalid input.Please enter a 1 for 'daily' or 2 for 'weekly' habits")
             continue
@@ -197,6 +199,10 @@ def _cli_print_weekly_habits():
     habits = Habit.get_all_habits()
     analysis.a1_print_habits_by_periodicity(habits,'weekly')
 
+def _cli_print_monthly_habits():
+    """Helper function that prints out weekly habits"""
+    habits = Habit.get_all_habits()
+    analysis.a1_print_habits_by_periodicity(habits, 'monthly')
 def cli_print_all_longest_streaks():
     """Print longest streaks of all habits
     """
@@ -235,8 +241,9 @@ def main_menu():
             click.echo("    1. Add a habit")
             click.echo("    2. Update habit")
             click.echo("    3. Mark habit as completed")
-            click.echo("    4. Analyse habits")
-            click.echo("    5. Exit")
+            click.echo("    4. Delete habits")
+            click.echo("    5. Analyse habits")
+            click.echo("    6. Exit")
 
             choice = click.prompt("Please enter your choice (1-5)", type=int)
 

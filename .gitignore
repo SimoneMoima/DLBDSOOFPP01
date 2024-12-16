@@ -1,6 +1,6 @@
 #Ignore Database files
 test.db
-main.db
+
 
 # Ignore Python cache
 __pycache__/
