@@ -145,14 +145,18 @@ def a1_print_longest_streak(habits: List['Habit']):
         habit (Habit): Habit whose streak should be printed out
     """
     print("\nYour longest streaks are:")
+    print("-----------------------------------")
+
     for habit in habits:
 
         period = _transform_periodicity(habit.longest_streak, habit.periodicity)
 
         if habit.longest_streak == 0:
-            print(f"\n '{habit.name}': You have not completed this habit yet. Try harder, you can do it!")
+            print(f"'{habit.name}'  : You have not completed this habit yet. Try harder, you can do it!")
         else:
-            print(f"\n '{habit.name}': {habit.longest_streak} {period}")
+            print(f"'{habit.name}'  : {habit.longest_streak} {period}")
+
+    print("----------------END----------------")
 
 def a1_print_habits_by_periodicity(habits: List['Habit'], wanted_periodicity: str):
     """
