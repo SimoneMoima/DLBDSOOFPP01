@@ -83,6 +83,29 @@ def cli_update_habit():
             click.echo("\n-----Exiting - Returning to Main Menu------")
             break
 
+def cli_delete_habit():
+        print("Inside delete habit cli")
+        while True:
+            habits = Habit.get_all_habits()
+            if not habits:
+                click.echo("\nNo habits found. Please add a habit first.")
+                return
+            #Display the habits to choose from
+            click.echo("\nHere are your current habits:")
+            for habit in habits:
+                click.echo(f"Habit id: {habit.habit_id}, Name: {habit.name}")
+            # Enter the id of the habit that was completed and check if it exists
+            while True:
+                habit_id = click.prompt("\nPlease enter the id of the habit you would like to delete", type=int) 
+                if Habit.habit_exists(habit_id):
+                    break
+                else:
+                    print(f"\nHabit with id {habit_id} doesn't exist. Please try again.")
+            Habit.delete_habit(habit_id)
+            
+            if not click.confirm("Would you like to delete another habit?", default =False):
+                click.echo("\n-----Exiting - Returning to Main Menu------")
+                break
 def cli_print_all_habits():
     """Function that prints all saved habits"""
     habits = Habit.get_all_habits()
@@ -245,7 +268,7 @@ def main_menu():
             click.echo("    5. Analyse habits")
             click.echo("    6. Exit")
 
-            choice = click.prompt("Please enter your choice (1-5)", type=int)
+            choice = click.prompt("Please enter your choice (1-6)", type=int)
 
             if choice == 1:
                 cli_add_habit()
@@ -257,9 +280,13 @@ def main_menu():
                 cli_mark_habit_completed()
 
             elif choice == 4:
-                analysation_mode()
+                print("Inside choice 4.")
+                cli_delete_habit()
 
             elif choice == 5:
+                analysation_mode()
+
+            elif choice == 6:
                 exit_app()
 
             else:

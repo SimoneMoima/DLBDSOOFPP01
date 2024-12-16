@@ -36,12 +36,23 @@ class Habit:
         """Clears all entries in the habit and tracker tables and sets all ids to 0.
         """
         self.db.db_clear_tables()
-
-    def delete_habit(self):
+    @classmethod
+    def delete_habit(self, habit_id: int = None, db = None):
         """Deletes the habit
         """
-        self.db.db_delete_habit(self.habit_id)
-    
+        db = db if db else HabitDatabase()  # Initialize database connection
+
+        if habit_id is None:
+            raise ValueError("Habit ID must be provided.")
+
+        # Validate if the habit exists before deleting
+        if not db.db_habit_exists(habit_id):
+            raise ValueError(f"No habit with ID {habit_id} exists.")
+
+        # Perform the deletion
+        db.db_delete_habit(habit_id)
+        print(f"\n----Habit with ID {habit_id} successfully deleted.---")
+
     def _correct_periodicity(self, periodicity: str):
         """Checks if the correct periodicity is entered
 
@@ -120,7 +131,6 @@ class Habit:
             raise ValueError(f"A habit with the name '{self.name}' and periodicity '{self.periodicity}' already exists.")
             
         self.habit_id = self.db.db_save(self.name, self.description, self.periodicity, self.creation_date, self.creation_time)
-       
         
     def update(self, name=None, description=None, periodicity=None):
         """
@@ -156,7 +166,19 @@ class Habit:
             return True
          except ValueError:
              return False
-         
+    
+    def _validate_date(validation_date: str):
+        try:
+            validation_date_formatted = datetime.strptime(validation_date, "%Y-%m-%d").date()
+            date_today = datetime.date.today()
+
+            if validation_date_formatted > date_today:
+                raise ValueError(f"The entered date {validation_date} is in the future. Please provide a date before today or today.")
+
+            return True
+        except ValueError as e:
+            raise ValueError(f"Invalid date format or value: {e}")
+        
     def zero_pad_date(self, completed_date):
         """Ensures dates are saved in the correct format with zero padding
 
