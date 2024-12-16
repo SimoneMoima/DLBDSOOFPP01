@@ -256,7 +256,7 @@ class HabitDatabase:
                )
         result = cur.fetchone()
         if result and result[0] == 1:
-            print(f"Habit {habit_id} - '{name}' has already been marked completed today.")
+            print(f"\nHabit {habit_id} - '{name}' has already been marked completed today.")
             return True
         
         return False

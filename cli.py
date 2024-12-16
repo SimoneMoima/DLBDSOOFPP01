@@ -108,6 +108,7 @@ def cli_mark_habit_completed():
 
         while True:       
             cli_completed_date = click.prompt("Enter the completion date (YYYY-MM-DD) or press Enter to use today's date", default=str(date.today()))
+
             
             if Habit.correct_date_format(cli_completed_date):
                 break

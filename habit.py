@@ -157,7 +157,25 @@ class Habit:
             return True
          except ValueError:
              return False
+         
+    def zero_pad_date(self, completed_date):
+        """Ensures dates are saved in the correct format with zero padding
 
+        Args:
+            completed_date (str): completion date
+
+        Raises:
+            ValueError: String doesnt have the correct format
+
+        Returns:
+            str: date string with zero padding
+        """
+        try:
+            year, month, day = map(int,completed_date.split("-"))
+            return f"{year:04d}-{month:02d}-{day:02d}"
+        except ValueError:
+            raise ValueError("\nInput date string must be in 'YYYY-M-D' format.")
+        
     def record_completion(self, completed_date: str = None, completed_time: str = None):
         """Marks a habit as completed 
 
@@ -171,6 +189,8 @@ class Habit:
         #If date and time are empty, use current date and time
         if completed_date is None:
             completed_date = str(date.today())
+        else:
+            completed_date = self.zero_pad_date(completed_date)
         if completed_time is None:
             completed_time = str(datetime.now().time().replace(microsecond=0))
        
@@ -372,24 +392,21 @@ class Habit:
 
         years_months = sorted({(datetime.strptime(date, "%Y-%m-%d").year, datetime.strptime(date, "%Y-%m-%d").month) for date in completed_dates}, 
               reverse= True ) # Set of sorted and unique (year, month) pairs
-        print(years_months)
+        
         
         for year, month in years_months:
             # In first iteration, previous is None. Then year and month of the first entry are added
             # Check if next month is contained, or check if there was a change in year -> add to streak else leave for loop
             if previous is None:
-                print("Inside none")
                 streak += 1
                 previous= (year, month)
             else: 
                 if (year == previous[0] and month == previous[1] - 1) or (year == previous[0] - 1 and month == 12 and previous[1] == 1):
-                    print("inside adding to streak")
                     streak += 1
                     previous = (year, month) # Update year and month
                 else:
                     break # Streak is broken if there is a gap
         
-        print(streak)
         self._update_current_streak(streak)
         self._update_longest_streak(streak)
 
