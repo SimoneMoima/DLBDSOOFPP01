@@ -126,21 +126,27 @@ class HabitDatabase:
             (habit_id,)
             )
             
-    def db_check_duplicate(self, name, periodicity):
-        """Check if a habit with the given name exists in the database.
+    def db_check_duplicate(self, name : str, periodicity: str):
+        """Check if a habit with the given name and periodicity comby exists in the database.
 
         Args:
             name (str): Name of the habit to check.
+            periodicity (str) : Periodicity of the habit to check(e.g. daily, weekly, mmonthly)
 
         Returns:
-            tuple or None: Returns habit data if a duplicate exists, None otherwise.
+            bool: Ture if habit data if a duplicate exists, None otherwise.
         """
-       
+
         cur = self.execute_query(
-            'SELECT * FROM habit WHERE name = ? AND periodicity =?', 
+            'SELECT 1 FROM habit WHERE name = ? AND periodicity =?', 
             (name, periodicity,)
             )
-        return cur.fetchone()  
+        result = cur.fetchone()
+
+        if result is None:
+            return False
+        
+        return result
 
     def db_get_habit_by_id(self, habit_id):
         """Retrieve habit details by habit_id.

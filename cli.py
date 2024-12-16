@@ -23,11 +23,15 @@ def exit_app():
 def cli_add_habit():
    """Function to add a habit to the database"""
    while True: 
-        name = click.prompt("Please enter a habit name ", type=str)
-        description = click.prompt("Please give a short description", type=str)
-        periodicity = click.prompt("Please choose between daily, weekly or monthly habit", type=str)
+        habit_name = click.prompt("Please enter a habit name ", type=str)
+        habit_periodicity = click.prompt("Please choose between daily, weekly or monthly habit", type=str)
+      
+        if Habit.is_duplicate(habit_name, habit_periodicity):
+            click.echo("\nA habit with this name and periodicity already exists. Please try again")
+            continue
         
-        habit = Habit(name=name, description=description, periodicity=periodicity)
+        habit_description = click.prompt("Please give a short description", type=str)
+        habit = Habit(name = habit_name, description = habit_description, periodicity = habit_periodicity)
         habit.save()
         click.echo(f"\n-----Habit '{habit.name}' added successfully-----")
 
@@ -58,13 +62,13 @@ def cli_update_habit():
 
         for habit in habits:
             if habit.habit_id == habit_id:
-                if click.confirm("\nWould you like to change the name of the habit?"):
+                if click.confirm("\nWould you like to change the name of the habit? Enter yes or no "):
                     new_name = click.prompt("Please enter the new name", type=str)
                     habit.update(name = new_name)
-                if click.confirm("\nWould you like to change the description?"):
+                if click.confirm("\nWould you like to change the description? Enter yes or no"):
                     new_description = click.prompt("Please enter the new description", type=str)
                     habit.update(description = new_description)
-                if click.confirm("\nWould you like to change the periodicity?"):
+                if click.confirm("\nWould you like to change the periodicity? Enter yes or no"):
                     while True:
                         new_periodicity = click.prompt("Please enter the new periodicity", type=str)
                         valid_periodicities={'daily', 'weekly', 'monthly'}

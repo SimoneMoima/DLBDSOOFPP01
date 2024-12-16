@@ -73,23 +73,18 @@ class Habit:
                 f"Longest streak: {self.longest_streak}\n"
                 "--------------------------------\n"
         )
-
-    def _is_duplicate(self, name: str = None, periodicity: str = None):
+    
+    @classmethod
+    def is_duplicate(self, name: str, periodicity: str, db = None):
         """Check for duplicates of habit names in database
-
-        Raises:
-            ValueError: No name was provided
-            ValueError: A habit with the same name and periodicity already exists
+            Returns bool: True if duplicate exitsts
         """
-        if not self.name or not name:
-            raise ValueError("Please provide a habit name.")
-        if name:
-            duplicate = self.db.db_check_duplicate(name, periodicity)
-        else:
-            duplicate = self.db.db_check_duplicate(self.name, self.periodicity)
+        db = db if db else HabitDatabase()  # Initialize database connection
+        duplicate = db.db_check_duplicate(name, periodicity)
         
         if duplicate:
-            raise ValueError(f"\n The'{self.periodicity}' habit '{self.name}' already exists.")
+            return True
+        return False
     
     @classmethod
     def habit_exists(self, habit_id: int, db=None):
@@ -111,17 +106,21 @@ class Habit:
 
         Raises:
             ValueError: Habit name is empty or longer than 255 char
-            ValueError: Habit periodicity is not weekly  or daily
             ValueError: Habit with the name already exists.
         """
         if not self.name or len(self.name) > 255:
-            raise ValueError("Habit must be non empty and less than 255 char.")
+            raise ValueError("Habit name must be non empty and less than 255 char.")
+        
         # Check if periodicity is correct 
         self._correct_periodicity(self.periodicity)
+
         # Check if name and periodicity pair does not exist already
-        self._is_duplicate(self.name, self.periodicity)
         
+        if self.db.db_check_duplicate(self.name, self.periodicity):
+            raise ValueError(f"A habit with the name '{self.name}' and periodicity '{self.periodicity}' already exists.")
+            
         self.habit_id = self.db.db_save(self.name, self.description, self.periodicity, self.creation_date, self.creation_time)
+       
         
     def update(self, name=None, description=None, periodicity=None):
         """
@@ -133,7 +132,7 @@ class Habit:
             periodicity (str): Periodicity of habit. Defaults to None.
         """
         if name: # Set new habit name
-            self._is_duplicate(name, periodicity) # Check if habit with this name and periodicity already exists
+            self.is_duplicate(name, periodicity) # Check if habit with this name and periodicity already exists
             self.name = name
         if description: # Set new habit description
             self.description = description
