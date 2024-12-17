@@ -135,12 +135,13 @@ def cli_mark_habit_completed():
 
         while True:       
             cli_completed_date = click.prompt("Enter the completion date (YYYY-MM-DD) or press Enter to use today's date", default=str(date.today()))
-
             
-            if Habit.correct_date_format(cli_completed_date):
+            if Habit.correct_date_format(cli_completed_date) and Habit.validate_date(cli_completed_date):
                 break
             else:
-                print("Wrong date format. Please enter YYYY-MM-DD")
+                print("Wrong date format or you used a future date. Please enter YYYY-MM-DD")
+        
+
         while True:
             cli_completed_time = click.prompt("Enter the completion time (hh:mm:ss) or press Enter to use the current time.", default=str(datetime.now().time().replace(microsecond=0)))
             

@@ -148,7 +148,7 @@ class TestHabit:
                    creation_date="2024-11-01", 
                    db=self.db)
     with pytest.raises(ValueError):
-      habit7.save()
+      habit7.save() # Name empty
     
     habit7 = Habit( name ="Do fun stuff",
                    description="Do something that makes you laugh out loud.", 
@@ -156,7 +156,11 @@ class TestHabit:
                    creation_date="2024-11-01", 
                    db=self.db)
     with pytest.raises(ValueError):
-      habit7.save()
+      habit7.save() #Incorrect periodicity
+
+    #Test delete function
+    habit2.delete_habit(habit2.habit_id, self.db)
+    assert Habit.habit_exists(habit2.habit_id, self.db) is False
 
     #Test update function
     habit2.update(name = "Run",
@@ -174,7 +178,7 @@ class TestHabit:
                    db=self.db)
     habit7.save()
     assert habit7.name == "Do fun stuff"  #Ensures habit7 was saved
-    habit7.delete_habit() 
+    habit7.delete_habit_instance() 
     assert Habit.habit_exists(habit7.habit_id, self.db) is False # Ensures habit7 was deleted
 
     #Add habit that already exists

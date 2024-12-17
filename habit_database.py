@@ -110,7 +110,7 @@ class HabitDatabase:
             return False
 
         return result 
-    
+
     def db_delete_habit(self, habit_id):
         """Delete a habit using its ID.
 

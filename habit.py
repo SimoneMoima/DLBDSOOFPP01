@@ -53,6 +53,13 @@ class Habit:
         db.db_delete_habit(habit_id)
         print(f"\n----Habit with ID {habit_id} successfully deleted.---")
 
+    def delete_habit_instance(self):
+
+        if not self.db.db_habit_exists(self.habit_id):
+            raise ValueError(f"No habit with ID {self.habit_id} exists.")
+        
+        self.db.db_delete_habit(self.habit_id)
+
     def _correct_periodicity(self, periodicity: str):
         """Checks if the correct periodicity is entered
 
@@ -167,17 +174,32 @@ class Habit:
          except ValueError:
              return False
     
-    def _validate_date(validation_date: str):
+    @staticmethod
+    def validate_date(validation_date: str):
+        """Function to ensure the date is not in the future
+
+        Args:
+            validation_date (str): date string to be evaluated
+
+        Raises:
+            ValueError: Date is in the future
+            ValueError: Invalid date format
+
+        Returns:
+            bool: 
+        """
         try:
             validation_date_formatted = datetime.strptime(validation_date, "%Y-%m-%d").date()
-            date_today = datetime.date.today()
+            date_today = date.today()
 
             if validation_date_formatted > date_today:
-                raise ValueError(f"The entered date {validation_date} is in the future. Please provide a date before today or today.")
-
+                return False 
+ #               raise ValueError(f"The entered date {validation_date} is in the future. Please provide a date before today or today.")
+                
             return True
         except ValueError as e:
             raise ValueError(f"Invalid date format or value: {e}")
+        
         
     def zero_pad_date(self, completed_date):
         """Ensures dates are saved in the correct format with zero padding
@@ -207,11 +229,13 @@ class Habit:
         Raises:
             ValueError: Habit has not been saved to database no id was set
         """
+            
         #If date and time are empty, use current date and time
         if completed_date is None:
             completed_date = str(date.today())
         else:
             completed_date = self.zero_pad_date(completed_date)
+            self.validate_date(completed_date)
         if completed_time is None:
             completed_time = str(datetime.now().time().replace(microsecond=0))
        
