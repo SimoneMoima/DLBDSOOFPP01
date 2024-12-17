@@ -38,7 +38,15 @@ class Habit:
         self.db.db_clear_tables()
     @classmethod
     def delete_habit(self, habit_id: int = None, db = None):
-        """Deletes the habit
+        """Classmethod to delete a habit
+
+        Args:
+            habit_id (int, optional): id of habit. Defaults to None.
+            db (_type_, optional): used database. Defaults to None.
+
+        Raises:
+            ValueError: Habit id was not provided
+            ValueError: Habit id does not exist
         """
         db = db if db else HabitDatabase()  # Initialize database connection
 
@@ -182,11 +190,10 @@ class Habit:
             validation_date (str): date string to be evaluated
 
         Raises:
-            ValueError: Date is in the future
             ValueError: Invalid date format
 
         Returns:
-            bool: 
+            bool: Returns true if the date is fine, and false if the date is in the future 
         """
         try:
             validation_date_formatted = datetime.strptime(validation_date, "%Y-%m-%d").date()
@@ -194,7 +201,6 @@ class Habit:
 
             if validation_date_formatted > date_today:
                 return False 
- #               raise ValueError(f"The entered date {validation_date} is in the future. Please provide a date before today or today.")
                 
             return True
         except ValueError as e:
